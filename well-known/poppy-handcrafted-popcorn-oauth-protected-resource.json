@@ -1,0 +1,9 @@
+{
+    "resource": "https://poppyhandcraftedpopcorn.com",
+    "authorization_servers": [
+        "https://shopify.com/authentication/42483876008"
+    ],
+    "bearer_methods_supported": [
+        "header"
+    ]
+}

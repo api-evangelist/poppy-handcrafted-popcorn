@@ -1,0 +1,101 @@
+generated: '2026-08-26'
+method: probed
+source: >-
+  https://poppyhandcraftedpopcorn.com/.well-known/openid-configuration,
+  /.well-known/oauth-authorization-server, /.well-known/oauth-protected-resource
+  (all HTTP 200), plus an anonymous tools/list against /api/ucp/mcp (HTTP 200).
+note: >-
+  derive-authentication.py produced nothing because it reads OpenAPI securitySchemes and
+  this provider publishes no OpenAPI. This profile is written from the provider's own
+  live OAuth/OIDC discovery documents instead, which is a stronger source than a derived one.
+
+summary: >-
+  Three layers, established by probe. Schema discovery (tools/list) and the storefront read JSON
+  are fully anonymous. Executing a tool (tools/call) is NOT anonymous: the server dereferences
+  the caller's UCP agent profile URI and, beyond that, answers AuthenticationRequired pointing at
+  Shopify's agent JWT flow. Customer-account operations sit behind Shopify-hosted OAuth 2.0 /
+  OpenID Connect with PKCE. Payment on complete_checkout adds a buyer-approval invariant on top
+  of all of it, which is a consent gate rather than a credential.
+
+schemes:
+- id: anonymous_mcp_discovery
+  type: none
+  applies_to: 'POST https://poppyhandcraftedpopcorn.com/api/ucp/mcp (method: tools/list)'
+  verified: probed
+  evidence: tools/list returned HTTP 200 with the full 13-tool schema set and no credential.
+  note: Schema discovery is genuinely open - no key, no token, no signup.
+- id: ucp_agent_profile
+  type: agent-identity (dereferenced URI)
+  applies_to: 'POST https://poppyhandcraftedpopcorn.com/api/ucp/mcp (method: tools/call)'
+  verified: probed
+  parameter: meta.ucp-agent.profile
+  required: true
+  evidence: >-
+    tools/call without the field returns HTTP 422 / JSON-RPC -32001 with data.code
+    invalid_profile_url ("Missing profile uri"). tools/call with a URI the server cannot
+    fetch returns HTTP 422 / -32001 with data.code profile_unreachable ("Http error").
+  note: >-
+    The server resolves the agent profile document over HTTP before executing a tool, so the
+    caller must publish a reachable UCP agent profile. This is a real gate, not a declaration.
+- id: shopify_agent_jwt
+  type: http bearer (JWT)
+  applies_to: 'POST /api/ucp/mcp (method: tools/call) - at least some tools'
+  verified: probed
+  evidence: >-
+    A tools/call naming an unknown tool returned HTTP 403 / JSON-RPC -32000
+    "AuthenticationRequired" with data "Unauthorized: A valid JWT is required to call <tool>.
+    See https://shopify.dev/docs/agents/get-started/authentication".
+  docs: https://shopify.dev/docs/agents/get-started/authentication
+  note: >-
+    Profile resolution is checked BEFORE the JWT check, so our probe could not reach the auth
+    layer for a real tool such as search_catalog - we could not establish which of the 13 tools
+    are callable without a JWT. Recorded as observed on the tools/call path, not asserted for
+    every tool.
+- id: anonymous_storefront_json
+  type: none
+  applies_to:
+  - https://poppyhandcraftedpopcorn.com/products.json
+  - https://poppyhandcraftedpopcorn.com/collections/{handle}/products.json
+  - https://poppyhandcraftedpopcorn.com/products/{handle}.json
+  verified: probed
+  evidence: HTTP 200 unauthenticated.
+- id: shopify_customer_accounts_oidc
+  type: openIdConnect
+  applies_to: Customer account operations (order history, saved addresses, payment methods)
+  verified: probed
+  issuer: https://shopify.com/authentication/42483876008
+  authorization_endpoint: https://shopify.com/authentication/42483876008/oauth/authorize
+  token_endpoint: https://shopify.com/authentication/42483876008/oauth/token
+  jwks_uri: https://shopify.com/authentication/42483876008/.well-known/jwks.json
+  response_types_supported:
+  - code
+  grant_types_supported:
+  - authorization_code
+  - refresh_token
+  - 'urn:ietf:params:oauth:grant-type:jwt-bearer'
+  code_challenge_methods_supported:
+  - S256
+  token_endpoint_auth_methods_supported:
+  - client_secret_basic
+  - client_secret_post
+  bearer_methods_supported:
+  - header
+  protected_resource: https://poppyhandcraftedpopcorn.com
+  scopes: scopes/poppy-handcrafted-popcorn-scopes.yml
+  note: >-
+    The authorization server is Shopify-operated but the tenant is Poppy's - the issuer path
+    and the shop_id in /.well-known/ucp are the same identifier, 42483876008, and the
+    protected resource is Poppy's own apex domain.
+
+payment_authorization:
+  mechanism: buyer approval, not a credential
+  source: https://poppyhandcraftedpopcorn.com/llms.txt
+  rule: >-
+    complete_checkout must not be called without explicit, contemporaneous buyer consent.
+    Handlers offered are Google Pay, Shopify card and Shop Pay; the agent never handles a PAN.
+  idempotency_key_required: true
+
+gaps:
+- No API keys, no client registration and no developer signup exist - this is not a developer
+  API program, so there is nothing to provision.
+- No /.well-known/security.txt (404), so no machine-readable security contact.

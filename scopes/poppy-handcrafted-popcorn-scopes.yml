@@ -1,0 +1,31 @@
+generated: '2026-08-26'
+method: probed
+source: https://poppyhandcraftedpopcorn.com/.well-known/openid-configuration (HTTP 200)
+note: >-
+  derive-oauth-scopes.py found no oauth2 securitySchemes because there is no OpenAPI.
+  These are the scopes_supported values the provider's own live OIDC discovery document
+  advertises for its customer-account authorization server. Descriptions state the standard
+  meaning of each scope; the provider publishes no scope reference page of its own.
+docs: null
+issuer: https://shopify.com/authentication/42483876008
+flows:
+- type: authorization_code
+  pkce_required_method: S256
+  authorization_url: https://shopify.com/authentication/42483876008/oauth/authorize
+  token_url: https://shopify.com/authentication/42483876008/oauth/token
+scope_count: 4
+scopes:
+- name: openid
+  description: OpenID Connect sign-in; requests an ID token identifying the customer.
+  standard: OIDC Core 1.0
+- name: email
+  description: Access to the customer's email address claim.
+  standard: OIDC Core 1.0
+- name: 'customer-account-api:full'
+  description: Full access to the authenticated customer's account data - orders, addresses, payment methods.
+  standard: Shopify Customer Account API
+- name: 'customer-account-mcp-api:full'
+  description: >-
+    Full access to the authenticated customer's account through the MCP transport. This is the
+    scope that lets an agent act on a signed-in buyer's account rather than anonymously.
+  standard: Shopify Customer Account MCP API

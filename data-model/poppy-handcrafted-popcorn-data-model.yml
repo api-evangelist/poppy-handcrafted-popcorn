@@ -1,0 +1,227 @@
+generated: '2026-08-26'
+method: derived
+source: mcp/poppy-handcrafted-popcorn-tools-list.json (live tools/list schemas, HTTP 200)
+note: >-
+  Derived from the JSON Schema inputSchema of the 13 live MCP tools. There is no OpenAPI, so
+  the entity graph is read from the tool request shapes rather than from components.$ref.
+  Only entities and fields that appear in the real schemas are listed.
+
+identifier_scheme:
+  format: Shopify Global ID (GID)
+  patterns:
+  - 'gid://shopify/Product/{id}'
+  - 'gid://shopify/ProductVariant/{id}'
+  note: >-
+    lookup_catalog accepts either; a variant GID resolves to the parent product with the exact
+    variant marked, a product GID returns the product with match "featured".
+
+money:
+  type: value object
+  fields:
+  - name: amount
+    type: integer
+    description: Minor units of the currency.
+  - name: currency
+    type: string
+    description: ISO 4217 code.
+  note: Used for every price, total, tax and discount value on the surface.
+
+entities:
+- name: Product
+  description: A catalog item, e.g. Salted Caramel or Dill Pickle popcorn.
+  identified_by: 'gid://shopify/Product/{id}'
+  read_by:
+  - search_catalog
+  - lookup_catalog
+  - get_product
+  writable: false
+- name: ProductVariant
+  description: A purchasable configuration of a Product (size / bag format).
+  identified_by: 'gid://shopify/ProductVariant/{id}'
+  read_by:
+  - lookup_catalog
+  - get_product
+  writable: false
+- name: LineItem
+  description: A quantity of a variant inside a Cart or Checkout.
+  fields:
+  - id
+  - quantity
+  - item
+  writable: true
+- name: Cart
+  description: A mutable basket. Moves no money.
+  identified_by: id
+  operations:
+    create: create_cart
+    read: get_cart
+    update: update_cart
+    reverse: cancel_cart
+  fields:
+  - line_items
+  - buyer
+  - context
+  - attribution
+  - fulfillment
+  - discounts
+- name: Checkout
+  description: >-
+    A priced, address-resolved purchase intent. Computes totals, taxes, shipping and discounts
+    without charging. Becomes an Order only on complete_checkout.
+  identified_by: id
+  operations:
+    create: create_checkout
+    read: get_checkout
+    update: update_checkout
+    complete: complete_checkout
+    reverse: cancel_checkout
+  fields:
+  - line_items
+  - buyer
+  - context
+  - attribution
+  - fulfillment
+  - discounts
+  - payment
+  - cart_id
+- name: Order
+  description: The completed, paid result of a Checkout.
+  identified_by: id
+  operations:
+    read: get_order
+  created_by: complete_checkout
+  writable: false
+  note: complete_checkout returns the order ID and a Thank You Page URL.
+- name: Buyer
+  description: Contact identity attached to a Cart or Checkout.
+  fields:
+  - email
+  - phone_number
+- name: BuyerContext
+  description: Localization and personalization signals that drive pricing and availability.
+  fields:
+  - address_country
+  - address_region
+  - postal_code
+  - language
+  - currency
+  - intent
+  - eligibility
+- name: Fulfillment
+  description: Shipping method selection.
+  fields:
+  - methods
+  constraints:
+    allows_multi_destination_shipping: false
+    allows_method_combinations:
+    - - shipping
+  source: /.well-known/ucp capability dev.ucp.shopping.fulfillment config
+- name: Discount
+  description: Discount codes applied to a Cart or Checkout.
+  fields:
+  - codes
+- name: PaymentInstrument
+  description: A payment method offered by a registered handler; the agent never handles a PAN.
+  fields:
+  - id
+  - handler_id
+  handlers:
+  - com.google.pay
+  - dev.shopify.card
+  - dev.shopify.shop_pay
+- name: Attribution
+  description: Marketing attribution carried through the purchase.
+  fields:
+  - referring_domain
+  - click_id_tag
+  - click_id_value
+  - activity_id_tag
+  - activity_id_value
+  - utm_campaign
+  - utm_source
+  - utm_medium
+  - utm_content
+  - utm_term
+
+relationships:
+- from: Product
+  to: ProductVariant
+  type: has_many
+  via: variants
+- from: LineItem
+  to: ProductVariant
+  type: belongs_to
+  via: id
+- from: Cart
+  to: LineItem
+  type: has_many
+  via: line_items
+- from: Cart
+  to: Buyer
+  type: has_one
+  via: buyer
+- from: Cart
+  to: BuyerContext
+  type: has_one
+  via: context
+- from: Cart
+  to: Discount
+  type: has_one
+  via: discounts
+- from: Cart
+  to: Fulfillment
+  type: has_one
+  via: fulfillment
+- from: Cart
+  to: Attribution
+  type: has_one
+  via: attribution
+- from: Checkout
+  to: Cart
+  type: belongs_to
+  via: cart_id
+- from: Checkout
+  to: LineItem
+  type: has_many
+  via: line_items
+- from: Checkout
+  to: Buyer
+  type: has_one
+  via: buyer
+- from: Checkout
+  to: BuyerContext
+  type: has_one
+  via: context
+- from: Checkout
+  to: Fulfillment
+  type: has_one
+  via: fulfillment
+- from: Checkout
+  to: Discount
+  type: has_one
+  via: discounts
+- from: Checkout
+  to: PaymentInstrument
+  type: has_many
+  via: payment.instruments
+- from: Order
+  to: Checkout
+  type: belongs_to
+  via: complete_checkout
+
+state_machine:
+  description: The one irreversible transition on the surface is Checkout -> Order.
+  transitions:
+  - from: (none)
+    to: Cart
+    via: create_cart
+    reversible_by: cancel_cart
+  - from: Cart
+    to: Checkout
+    via: create_checkout (cart_id)
+    reversible_by: cancel_checkout
+  - from: Checkout
+    to: Order
+    via: complete_checkout
+    reversible_by: null
+    note: Requires meta.idempotency-key and buyer approval. No API reversal exists.

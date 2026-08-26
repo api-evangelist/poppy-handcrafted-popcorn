@@ -1,0 +1,45 @@
+generated: '2026-08-26'
+method: generated
+source: >-
+  mcp/poppy-handcrafted-popcorn-tools-list.json (live tools/list, HTTP 200),
+  https://poppyhandcraftedpopcorn.com/llms.txt, /agents.md
+note: >-
+  Grounded in the 13 verified live MCP tool names, not in an OpenAPI - this provider publishes no
+  OpenAPI. No operationId is invented; every operation named in a skill appears in the saved
+  tools/list manifest. The provider publishes its own agent instructions at /agents.md and
+  /llms.txt, which are saved verbatim under llms/; these skills package the flows those documents
+  describe against the real schemas.
+skill_count: 2
+skills:
+- name: poppy-browse-catalog
+  file: poppy-handcrafted-popcorn-browse-catalog.md
+  description: Search, resolve and read Poppy products via the UCP MCP endpoint.
+  operations:
+  - search_catalog
+  - lookup_catalog
+  - get_product
+  write_surface: false
+- name: poppy-cart-and-checkout
+  file: poppy-handcrafted-popcorn-cart-and-checkout.md
+  description: Cart to checkout to order, with the buyer-approval and idempotency rules.
+  operations:
+  - create_cart
+  - get_cart
+  - update_cart
+  - cancel_cart
+  - create_checkout
+  - get_checkout
+  - update_checkout
+  - complete_checkout
+  - cancel_checkout
+  - get_order
+  write_surface: true
+  irreversible_operations:
+  - complete_checkout
+provider_published_agent_docs:
+- url: https://poppyhandcraftedpopcorn.com/agents.md
+  status: 200
+  file: ../llms/poppy-handcrafted-popcorn-agents.md
+- url: https://poppyhandcraftedpopcorn.com/llms.txt
+  status: 200
+  file: ../llms/poppy-handcrafted-popcorn-llms.txt

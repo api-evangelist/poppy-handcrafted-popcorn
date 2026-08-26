@@ -1,0 +1,142 @@
+generated: '2026-08-26'
+method: probed
+source: https://poppyhandcraftedpopcorn.com/api/ucp/mcp (JSON-RPC tools/list, HTTP 200, unauthenticated)
+name: Poppy Hand-Crafted Popcorn UCP Commerce MCP Server
+status: live
+protocol: Model Context Protocol over HTTP JSON-RPC 2.0
+implements: Universal Commerce Protocol (UCP) 2026-04-08
+
+ownership:
+  verified: true
+  note: >-
+    The endpoint is served on the company's own apex domain and the discovery document
+    identifies this merchant specifically - /.well-known/ucp carries merchant_name
+    "Poppy Hand-Crafted Popcorn", merchant_origin poppyhandcraftedpopcorn.com and
+    shop_id 42483876008, and /.well-known/oauth-protected-resource names
+    resource https://poppyhandcraftedpopcorn.com. The MCP transport and the UCP tool
+    contract are provided natively by Shopify to every store on the platform; the
+    catalog, cart, checkout and order data behind them are Poppy's.
+
+deployment:
+  mode: remote
+  endpoint: https://poppyhandcraftedpopcorn.com/api/ucp/mcp
+  auth: none
+  verified: probed
+  note: >-
+    tools/list answered HTTP 200 anonymously with the full 13-tool schema set.
+    A canonical alternate endpoint is published in /.well-known/ucp as
+    https://poppyhandcraftedpopcorn.myshopify.com/api/ucp/mcp - the same server on the
+    platform hostname. No stdio package is published, so there is nothing to install.
+
+discovery:
+- path: /llms.txt
+  url: https://poppyhandcraftedpopcorn.com/llms.txt
+  status: 200
+- path: /agents.md
+  url: https://poppyhandcraftedpopcorn.com/agents.md
+  status: 200
+- path: /robots.txt
+  url: https://poppyhandcraftedpopcorn.com/robots.txt
+  status: 200
+  note: robots.txt comments advertise the UCP discovery and MCP endpoint directly.
+- path: /.well-known/ucp
+  url: https://poppyhandcraftedpopcorn.com/.well-known/ucp
+  status: 200
+
+transport:
+  request: 'POST with Content-Type: application/json'
+  accept: application/json, text/event-stream
+  jsonrpc: '2.0'
+  raw_manifest: mcp/poppy-handcrafted-popcorn-tools-list.json
+
+meta_contract:
+  required_on_every_tool:
+  - name: meta.ucp-agent.profile
+    type: string (uri)
+    description: Agent profile URI for UCP discovery. Required by every one of the 13 tools.
+  - name: meta.idempotency-key
+    type: string
+    description: Required ONLY on complete_checkout. Not accepted by any other tool.
+
+tool_count: 13
+tools:
+- name: search_catalog
+  category: catalog
+  description: Search for products from the online store, hosted on Shopify.
+  paginated: true
+- name: lookup_catalog
+  category: catalog
+  description: Look up multiple products or variants by identifier in a single request.
+- name: get_product
+  category: catalog
+  description: Retrieve complete product detail by identifier. Returns a singular product.
+- name: create_cart
+  category: cart
+  description: Creates a new cart.
+- name: get_cart
+  category: cart
+  description: Get the cart contents.
+- name: update_cart
+  category: cart
+  description: Perform updates to a cart.
+- name: cancel_cart
+  category: cart
+  description: Cancels a cart.
+  reverses: create_cart
+- name: create_checkout
+  category: checkout
+  description: Creates a checkout. Returns line items, totals, discounts and taxes.
+- name: get_checkout
+  category: checkout
+  description: Returns details about the checkout, including line items, totals, discounts and taxes.
+- name: update_checkout
+  category: checkout
+  description: Updates a checkout (used to set shipping address and method).
+- name: complete_checkout
+  category: checkout
+  description: Completes a checkout and returns order ID and Thank You Page URL. Requires meta.idempotency-key and buyer-approved payment.
+  requires_idempotency_key: true
+- name: cancel_checkout
+  category: checkout
+  description: Cancels a checkout.
+  reverses: create_checkout
+- name: get_order
+  category: order
+  description: Get the details of an order.
+
+capabilities_declared:
+  source: https://poppyhandcraftedpopcorn.com/.well-known/ucp
+  services:
+  - dev.ucp.shopping (transport mcp, version 2026-04-08)
+  - dev.ucp.shopping (transport embedded, version 2026-04-08)
+  capabilities:
+  - dev.ucp.shopping.cart
+  - dev.ucp.shopping.checkout
+  - dev.ucp.shopping.fulfillment
+  - dev.ucp.shopping.discount
+  - dev.ucp.shopping.order
+  - dev.ucp.shopping.catalog.search
+  - dev.ucp.shopping.catalog.lookup
+  - dev.shopify.catalog
+  payment_handlers:
+  - com.google.pay (gpay)
+  - dev.shopify.card
+  - dev.shopify.shop_pay
+
+buyer_approval_invariant:
+  stated: true
+  source: https://poppyhandcraftedpopcorn.com/llms.txt
+  rule: >-
+    "Checkout requires human approval. Agents must not complete payment without explicit
+    buyer consent." robots.txt repeats it: no scripted form fills or end-to-end agent flows
+    that finalize payment without contemporaneous human approval.
+
+related_reading_surface:
+  note: Unauthenticated read-only storefront JSON published in llms.txt, verified 200.
+  endpoints:
+  - url: https://poppyhandcraftedpopcorn.com/products.json
+    status: 200
+  - url: https://poppyhandcraftedpopcorn.com/collections/all/products.json
+    status: 200
+  - url: https://poppyhandcraftedpopcorn.com/sitemap.xml
+    status: 200

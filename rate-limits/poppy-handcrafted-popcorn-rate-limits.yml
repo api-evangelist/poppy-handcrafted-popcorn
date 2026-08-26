@@ -1,0 +1,35 @@
+generated: '2026-08-26'
+method: searched
+source: https://poppyhandcraftedpopcorn.com/llms.txt (HTTP 200)
+note: >-
+  The provider states that the MCP endpoint is rate-limited and tells agents to back off on 429,
+  but publishes no numeric limit, window or burst. A live tools/list response carried no
+  RateLimit-* or X-RateLimit-* headers, so an agent gets no runtime budget signal - only the
+  exhaustion signal after the fact.
+limit_count: 0
+scope: per-IP
+endpoint: https://poppyhandcraftedpopcorn.com/api/ucp/mcp
+policy_statement_verbatim: 'Respect rate limits. The MCP endpoint is rate-limited per IP. Back off on 429 responses.'
+limits: []
+response_headers:
+  observed: []
+  probed: true
+  probe: 'POST /api/ucp/mcp tools/list, HTTP 200 on 2026-08-26'
+  present_instead:
+  - name: x-request-id
+    note: Request correlation id, returned on success.
+  - name: x-shopify-ucp-mcp-api-version
+    value: '2026-04-08'
+    note: Echoes the negotiated UCP protocol version on every response.
+  missing:
+  - RateLimit-Limit / RateLimit-Remaining / RateLimit-Reset (RFC 9331 style)
+  - X-RateLimit-* (de facto style)
+  - Retry-After
+exhaustion:
+  status_code: 429
+  documented: true
+  retry_after_header: not documented
+  guidance: Back off on 429 responses.
+gap_for_provider: >-
+  Publishing RateLimit-Limit/Remaining/Reset and Retry-After on the MCP endpoint would let an
+  agent pace itself instead of discovering the ceiling by hitting it.

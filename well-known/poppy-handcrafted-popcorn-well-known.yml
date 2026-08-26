@@ -1,0 +1,47 @@
+generated: '2026-08-26'
+method: probed
+source: live GET probes of /.well-known/* on both provider hosts
+note: >-
+  Probed on 2026-08-26. The apex host serves four real machine-readable documents:
+  a UCP merchant profile and three OAuth/OIDC discovery documents scoped to Shopify
+  shop 42483876008. security.txt, api-catalog, ai-plugin.json, agent-card.json and
+  agent.json all 404 on both hosts, so no SecurityTxt and no AgentCard pointer is emitted.
+hosts:
+- host: poppyhandcraftedpopcorn.com
+  documents:
+  - path: /.well-known/ucp
+    status: 200
+    file: poppy-handcrafted-popcorn-ucp.json
+    content_type: application/json
+    note: Universal Commerce Protocol merchant profile, version 2026-04-08.
+  - path: /.well-known/openid-configuration
+    status: 200
+    file: poppy-handcrafted-popcorn-openid-configuration.json
+    content_type: application/json
+  - path: /.well-known/oauth-authorization-server
+    status: 200
+    file: poppy-handcrafted-popcorn-oauth-authorization-server.json
+    content_type: application/json
+  - path: /.well-known/oauth-protected-resource
+    status: 200
+    file: poppy-handcrafted-popcorn-oauth-protected-resource.json
+    content_type: application/json
+  - path: /.well-known/security.txt
+    status: 404
+  - path: /.well-known/api-catalog
+    status: 404
+  - path: /.well-known/ai-plugin.json
+    status: 404
+  - path: /.well-known/agent-card.json
+    status: 404
+  - path: /.well-known/agent.json
+    status: 404
+- host: poppyhandcraftedpopcorn.myshopify.com
+  documents:
+  - path: /.well-known/ucp
+    status: 200
+    note: Same merchant profile served on the platform hostname; not saved twice.
+  - path: /.well-known/agent-card.json
+    status: 404
+  - path: /.well-known/agent.json
+    status: 404

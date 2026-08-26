@@ -1,0 +1,50 @@
+generated: '2026-08-26'
+method: probed
+source: https://poppyhandcraftedpopcorn.com/.well-known/ucp (HTTP 200), /llms.txt (HTTP 200)
+note: >-
+  Poppy operates no developer program, so there is no SLA, no status page of its own and no
+  deprecation policy of its own. What it does publish is a versioned protocol contract with an
+  explicit multi-version support window, which is the real lifecycle signal here.
+
+versioning:
+  scheme: dated protocol version (UCP)
+  current_version: '2026-04-08'
+  current_version_label: latest stable
+  supported_versions:
+  - version: '2026-04-08'
+    profile: https://poppyhandcraftedpopcorn.myshopify.com/.well-known/ucp/2026-04-08
+    status: current
+  - version: '2026-01-23'
+    profile: https://poppyhandcraftedpopcorn.myshopify.com/.well-known/ucp/2026-01-23
+    status: supported
+  negotiation: >-
+    A client reads /.well-known/ucp and selects a version from supported_versions; each version
+    has its own resolvable profile document. Two concurrent versions are live, which means at
+    least one prior dated version is kept callable rather than cut over.
+  declared_in: /.well-known/ucp and https://poppyhandcraftedpopcorn.com/llms.txt
+
+deprecation_policy:
+  published: false
+  sunset_header: not observed
+  deprecation_header: not observed
+  note: >-
+    No deprecation or sunset policy is published, and no RFC 8594 headers were observed.
+    The dated-version list is the only forward signal; it says which versions work today,
+    not when 2026-01-23 will be withdrawn.
+
+status_page:
+  published: false
+  note: >-
+    Poppy publishes no status page. The underlying platform's status page belongs to Shopify,
+    not to this company, so no StatusPage pointer is emitted.
+
+sla:
+  published: false
+
+deprecated_operations: []
+
+changelog:
+  published: false
+  note: >-
+    No dated changelog for the commerce surface. The company blog at /blogs/news is product and
+    brand news, not release notes, so no ChangeLog pointer is emitted.

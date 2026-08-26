@@ -1,0 +1,88 @@
+generated: '2026-08-26'
+method: probed
+source: live JSON-RPC probes against https://poppyhandcraftedpopcorn.com/api/ucp/mcp on 2026-08-26
+note: >-
+  Every entry below was observed on a real response, not derived from a spec - the provider
+  publishes no OpenAPI and no error reference page. Each row records the HTTP status and the
+  JSON-RPC error object exactly as returned.
+
+format: jsonrpc-2.0-error
+media_type: application/json
+envelope:
+  shape: '{"jsonrpc":"2.0","id":<id>,"error":{"code":<int>,"message":<string>,"data":<string|object>}}'
+  data_variants:
+  - type: string
+    note: A plain remediation sentence (transport-level and auth errors).
+  - type: object
+    note: 'UCP discovery errors: {code, content, continue_url}.'
+  continue_url:
+    description: >-
+      On UCP discovery failures the error carries continue_url pointing at the storefront, so an
+      agent that cannot satisfy the machine path can hand the buyer back to a human-usable page.
+
+trace:
+  header: x-request-id
+  observed: 78619103-35ad-4dc3-83a6-00c33209a42b-1787768632
+  note: Returned on success and available for support escalation.
+
+problem_types:
+- id: invalid_profile_url
+  jsonrpc_code: -32001
+  http_status: 422
+  message: UCP discovery failed
+  data_code: invalid_profile_url
+  detail: 'Unable to fetch agent profile: Missing profile uri'
+  cause: meta.ucp-agent.profile was absent from the request.
+  remediation: >-
+    Supply meta.ucp-agent.profile with the URI of a UCP agent profile document you publish and
+    that is reachable from the public internet.
+  retryable: false
+  observed: true
+- id: profile_unreachable
+  jsonrpc_code: -32001
+  http_status: 422
+  message: UCP discovery failed
+  data_code: profile_unreachable
+  detail: 'Unable to fetch agent profile: Http error'
+  cause: The server tried to dereference meta.ucp-agent.profile and the fetch failed.
+  remediation: Ensure the agent profile URI resolves over HTTPS and returns a valid UCP agent profile.
+  retryable: true
+  observed: true
+- id: authentication_required
+  jsonrpc_code: -32000
+  http_status: 403
+  message: AuthenticationRequired
+  detail: >-
+    'Unauthorized: A valid JWT is required to call <tool>. See
+    https://shopify.dev/docs/agents/get-started/authentication for instructions on generating a
+    token and authenticating your requests.'
+  cause: tools/call reached the auth layer without a valid agent JWT.
+  remediation: https://shopify.dev/docs/agents/get-started/authentication
+  retryable: false
+  observed: true
+- id: invalid_request
+  jsonrpc_code: -32600
+  http_status: 400
+  message: Invalid Request
+  detail: Invalid JSON in request body.
+  cause: Request body was not parseable JSON.
+  remediation: Send a well-formed JSON-RPC 2.0 envelope with Content-Type application/json.
+  retryable: false
+  observed: true
+- id: rate_limited
+  http_status: 429
+  message: not observed
+  cause: Per-IP rate limiting on the MCP endpoint.
+  remediation: Back off on 429 responses.
+  source: https://poppyhandcraftedpopcorn.com/llms.txt
+  retryable: true
+  observed: false
+  note: >-
+    Documented by the provider in llms.txt but not reproduced here - we did not send enough
+    traffic to trigger it, and deliberately did not try.
+
+not_applicable:
+- id: rfc9457
+  note: >-
+    No application/problem+json. RFC 9457 does not apply to a JSON-RPC transport; the
+    JSON-RPC 2.0 error object is the correct envelope for this surface.

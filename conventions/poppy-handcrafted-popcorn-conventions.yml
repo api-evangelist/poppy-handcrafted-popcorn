@@ -1,0 +1,176 @@
+generated: '2026-08-26'
+method: derived
+source: >-
+  mcp/poppy-handcrafted-popcorn-tools-list.json (live tools/list, HTTP 200),
+  https://poppyhandcraftedpopcorn.com/llms.txt, /agents.md, /robots.txt,
+  well-known/poppy-handcrafted-popcorn-ucp.json
+note: >-
+  Cross-cutting runtime semantics for the UCP/MCP commerce surface. Every statement below is
+  read out of the live tool schemas or the provider's own published agent instructions.
+  There is no OpenAPI, so nothing here is derived from a REST contract.
+
+auth_style:
+  agent_surface: anonymous
+  customer_surface: OAuth 2.0 authorization code + PKCE (S256) via Shopify-hosted OIDC
+  detail: authentication/poppy-handcrafted-popcorn-authentication.yml
+
+idempotency:
+  supported: true
+  scope: complete_checkout only
+  mechanism: request field
+  parameter: meta.idempotency-key
+  required: true
+  type: string
+  description_verbatim: An idempotency key for completing the checkout.
+  retention: not published
+  note: >-
+    This is the strongest agent-safety property on the surface. complete_checkout is the one
+    irreversible money-moving call and it REFUSES to run without an idempotency key -
+    the key is in inputSchema.properties.meta.required, not merely optional. No other tool
+    accepts an idempotency key, and none of them charges anything.
+  evidence: mcp/poppy-handcrafted-popcorn-tools-list.json (tool complete_checkout)
+
+pagination:
+  supported: true
+  style: cursor
+  applies_to:
+  - search_catalog
+  request_object: catalog.pagination
+  params:
+  - name: cursor
+    type: string
+    description: Pagination cursor.
+  - name: limit
+    type: integer
+    default: 10
+    minimum: 1
+    description: Number of results to return.
+  note: lookup_catalog and get_product are identifier lookups and are not paginated.
+
+filtering:
+  applies_to:
+  - search_catalog
+  object: catalog.filters
+  params:
+  - name: categories
+    type: array
+    note: Category filters combined with OR logic.
+  - name: price
+    type: object
+    note: min/max in minor currency units.
+  - name: available
+    type: boolean
+    default: true
+    note: Default true - only sale-ready items.
+
+buyer_context:
+  object: catalog.context
+  note: >-
+    llms.txt instructs agents to pass buyer context for accurate pricing and availability.
+    Fields are address_country (ISO 3166-1 alpha-2), address_region, postal_code,
+    language (IETF BCP 47), currency (ISO 4217) and intent.
+  platform_signals:
+  - dev.ucp.buyer_ip
+  - dev.ucp.user_agent
+
+money_representation:
+  format: integer minor units paired with an ISO 4217 currency code
+  example: '{"amount": 2500, "currency": "USD"} is $25.00'
+  note: >-
+    Restated in the description of all 13 tools, including the instruction to convert to major
+    units before quoting a price to a buyer. An agent that skips this misquotes by 100x.
+
+identifiers:
+  scheme: Shopify GIDs
+  examples:
+  - 'gid://shopify/Product/...'
+  - 'gid://shopify/ProductVariant/...'
+  note: lookup_catalog resolves both; a variant ID returns the parent product with the exact variant.
+
+agent_identity:
+  required: true
+  parameter: meta.ucp-agent.profile
+  type: string (uri)
+  description: Agent profile URI for UCP discovery. Required by all 13 tools.
+  enforced: true
+  enforcement_verified: probed
+  note: >-
+    Not a decorative field. The server DEREFERENCES the profile URI before running any tool.
+    A tools/call with the field absent returns -32001 invalid_profile_url; a tools/call with a
+    URI the server cannot fetch returns -32001 profile_unreachable. An agent must therefore host
+    a reachable UCP agent profile document before it can call anything - tools/list is anonymous,
+    tools/call is not.
+
+versioning:
+  scheme: dated protocol versions
+  current: '2026-04-08'
+  detail: lifecycle/poppy-handcrafted-popcorn-lifecycle.yml
+
+error_envelope:
+  shape: JSON-RPC 2.0 error object
+  detail: errors/poppy-handcrafted-popcorn-problem-types.yml
+
+rate_limit_signaling:
+  documented: true
+  detail: rate-limits/poppy-handcrafted-popcorn-rate-limits.yml
+
+dry_run_mode:
+  supported: false
+  grade: na
+  note: >-
+    No dry-run or simulation parameter appears in any tool schema. It is only partly needed
+    here: create_checkout and update_checkout compute totals, taxes and shipping WITHOUT
+    charging anything, so the whole flow up to complete_checkout is effectively a rehearsal.
+
+reversibility:
+  grade: documented
+  note: >-
+    Both agent-initiated write surfaces ship an explicit reversal tool, and they are visible in
+    the live schema rather than buried in prose. What is NOT published anywhere is a window:
+    neither the tool descriptions, llms.txt, agents.md nor the refund policy state how long a
+    cart or checkout stays cancellable, or a returns deadline. Grade is therefore `documented`
+    and not `verified`. No window is asserted here because the provider states none.
+  surfaces:
+  - write_operation: create_cart
+    reversal_operation: cancel_cart
+    reversal_type: cancel
+    window: null
+    window_source: null
+    consequence_before_reversal: none - a cart moves no money.
+    confidence: high
+    evidence: mcp/poppy-handcrafted-popcorn-tools-list.json
+  - write_operation: create_checkout
+    reversal_operation: cancel_checkout
+    reversal_type: cancel
+    window: null
+    window_source: null
+    consequence_before_reversal: >-
+      none until complete_checkout - a checkout reserves nothing and charges nothing.
+    confidence: high
+    evidence: mcp/poppy-handcrafted-popcorn-tools-list.json
+  - write_operation: complete_checkout
+    reversal_operation: null
+    reversal_type: none via API
+    window: null
+    window_source: null
+    consequence_before_reversal: >-
+      Irreversible through this surface. Payment is captured and an order is created; the tool
+      returns an order ID and a Thank You Page URL. There is no refund, void or cancel_order tool
+      in the 13-tool set, and get_order is read-only. Reversal after this point is a human
+      customer-service path only, via hello@poppyhandcraftedpopcorn.com or 828-552-3149.
+    confidence: high
+    mitigations:
+    - meta.idempotency-key is required, so a retry cannot double-charge.
+    - Buyer approval is mandated before payment (llms.txt, robots.txt).
+  human_reversal_path:
+    documented: true
+    url: https://poppyhandcraftedpopcorn.com/policies/refund-policy
+    status: 200
+    stated_window: null
+    verbatim: >-
+      "If there is an issue with your order, or you just didn't love your experience with Poppy,
+      let us know so our customer service team can fix it!" - a satisfaction guarantee with no
+      stated deadline, contact hello@poppyhandcraftedpopcorn.com or 828-552-3149.
+  gap_for_provider: >-
+    Publishing a returns/cancellation window on the refund policy page, and an order-cancellation
+    window in the complete_checkout tool description, would move this from documented to verified.

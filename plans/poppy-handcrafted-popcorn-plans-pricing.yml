@@ -1,0 +1,25 @@
+generated: '2026-08-26'
+method: searched
+source: >-
+  https://poppyhandcraftedpopcorn.com/llms.txt, /agents.md, /.well-known/ucp, and the
+  storefront - all probed 2026-08-26
+note: >-
+  Poppy sells popcorn, not API access. There is no developer plan, no metered tier, no paid
+  API product and no "contact sales" API gate - the UCP/MCP agent surface is offered free and
+  unauthenticated for discovery as part of the storefront. The only money on this surface is the
+  retail price of goods, which is returned per-product by the catalog tools rather than published
+  as a plan table. plan_count is 0 because there are genuinely no API plans, not because none was found.
+plan_count: 0
+plans: []
+api_pricing_model: free
+paid_api_products: []
+commerce_pricing:
+  model: retail product pricing
+  currency_representation: integer minor units with an ISO 4217 code
+  discovery: search_catalog / get_product / lookup_catalog return per-variant price
+  storefront: https://poppyhandcraftedpopcorn.com/collections/all
+  free_shipping_threshold: 'orders over $60 (stated on the storefront)'
+  payment_handlers:
+  - com.google.pay
+  - dev.shopify.card
+  - dev.shopify.shop_pay

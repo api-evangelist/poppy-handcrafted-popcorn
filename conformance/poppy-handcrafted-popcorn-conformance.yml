@@ -1,0 +1,112 @@
+generated: '2026-08-26'
+method: probed
+source: >-
+  https://poppyhandcraftedpopcorn.com/.well-known/ucp,
+  /.well-known/openid-configuration, /.well-known/oauth-protected-resource,
+  live tools/list against /api/ucp/mcp
+note: >-
+  Assertions are graded against what the CONTRACT declares about itself, not against marketing
+  copy. Poppy publishes no compliance or certification program of its own, so no Compliance
+  pointer is emitted - see security/poppy-handcrafted-popcorn-trust-center.yml.
+
+standards:
+- id: ucp
+  name: Universal Commerce Protocol
+  version: '2026-04-08'
+  conforms: true
+  domain_standard: true
+  evidence: >-
+    /.well-known/ucp declares ucp.version "2026-04-08", supported_versions 2026-04-08 and
+    2026-01-23, and a services.dev.ucp.shopping entry with transport "mcp" pointing at
+    https://poppyhandcraftedpopcorn.myshopify.com/api/ucp/mcp and schema
+    https://ucp.dev/2026-04-08/services/shopping/mcp.openrpc.json.
+  capability_urns:
+  - dev.ucp.shopping.cart
+  - dev.ucp.shopping.checkout
+  - dev.ucp.shopping.fulfillment
+  - dev.ucp.shopping.discount
+  - dev.ucp.shopping.order
+  - dev.ucp.shopping.catalog.search
+  - dev.ucp.shopping.catalog.lookup
+  - dev.shopify.catalog
+  spec: https://ucp.dev
+- id: mcp
+  name: Model Context Protocol
+  conforms: true
+  evidence: >-
+    POST /api/ucp/mcp with {"jsonrpc":"2.0","id":1,"method":"tools/list"} returned HTTP 200
+    and a well-formed result.tools array of 13 tools, each with a JSON Schema inputSchema
+    declaring $schema https://json-schema.org/draft/2020-12/schema.
+- id: json-schema-2020-12
+  name: JSON Schema 2020-12
+  conforms: true
+  evidence: Every one of the 13 tool inputSchema documents declares draft 2020-12 explicitly.
+- id: jsonrpc2
+  name: JSON-RPC 2.0
+  conforms: true
+  evidence: tools/list response carries jsonrpc "2.0" and echoes the request id.
+- id: oidc
+  name: OpenID Connect Discovery 1.0
+  conforms: true
+  evidence: >-
+    /.well-known/openid-configuration returns HTTP 200 with issuer, authorization_endpoint,
+    token_endpoint, jwks_uri and scopes_supported including "openid".
+- id: oauth2
+  name: OAuth 2.0 (RFC 6749)
+  conforms: true
+  evidence: >-
+    /.well-known/oauth-authorization-server (RFC 8414) served at HTTP 200 with
+    authorization_code and refresh_token grants.
+- id: rfc9728
+  name: OAuth 2.0 Protected Resource Metadata (RFC 9728)
+  conforms: true
+  evidence: >-
+    /.well-known/oauth-protected-resource returns resource https://poppyhandcraftedpopcorn.com,
+    authorization_servers [https://shopify.com/authentication/42483876008] and
+    bearer_methods_supported ["header"].
+- id: rfc7636
+  name: PKCE (RFC 7636)
+  conforms: true
+  evidence: code_challenge_methods_supported ["S256"] in the OIDC discovery document.
+- id: iso4217
+  name: ISO 4217 currency codes
+  conforms: true
+  evidence: All money values are {amount, currency} pairs in minor units with ISO 4217 codes.
+- id: iso3166
+  name: ISO 3166-1 alpha-2 country codes
+  conforms: true
+  evidence: catalog.context.address_country is documented as ISO 3166-1 alpha-2.
+- id: bcp47
+  name: BCP 47 language tags
+  conforms: true
+  evidence: catalog.context.language is documented as IETF BCP 47.
+- id: llms-txt
+  name: llms.txt
+  conforms: true
+  evidence: https://poppyhandcraftedpopcorn.com/llms.txt HTTP 200, first-party, mirrors /agents.md.
+- id: rfc9457
+  name: RFC 9457 Problem Details
+  conforms: false
+  evidence: >-
+    No REST surface and no application/problem+json. Errors are JSON-RPC 2.0 error objects,
+    which is correct for this transport - this is a not-applicable, not a failure.
+- id: rfc9116
+  name: RFC 9116 security.txt
+  conforms: false
+  evidence: /.well-known/security.txt returned 404 on both hosts.
+- id: a2a
+  name: A2A Agent Card
+  conforms: false
+  evidence: >-
+    /.well-known/agent-card.json and /.well-known/agent.json returned 404 on
+    poppyhandcraftedpopcorn.com and poppyhandcraftedpopcorn.myshopify.com.
+- id: openapi
+  name: OpenAPI
+  conforms: false
+  evidence: >-
+    No OpenAPI is published. /openapi.json, /swagger.json and /v1/openapi.json 404;
+    /openapi.yaml, /api-docs and /graphql return the storefront HTML shell (soft-200).
+    The machine-readable contract this provider ships is the MCP tools/list manifest.
+
+certifications: []
+compliance_programs: []
