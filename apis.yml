@@ -1,6 +1,17 @@
 aid: poppy-handcrafted-popcorn
 name: Poppy Handcrafted Popcorn
 description: 'Poppy Hand-Crafted Popcorn is a woman-owned gourmet snack maker founded in 2014 by Ginger Frank in Asheville, North Carolina, producing small-batch sweet and savory popcorn from non-GMO corn and simple natural ingredients. It sells direct-to-consumer, through wholesale and corporate gifting, and via retailers across North America. Its public machine surface is not a developer API program but an agent-commerce one: the Shopify-hosted storefront publishes a first-party /llms.txt and /agents.md, a /.well-known/ucp Universal Commerce Protocol merchant profile, and an unauthenticated UCP MCP endpoint at /api/ucp/mcp exposing thirteen catalog, cart, checkout and order tools with full JSON Schema inputs.'
+deliveryModel:
+  model: saas
+  open_source: false
+  commercial: true
+  callable_host: false
+  label: Hosted service · you call their endpoint
+  confidence: medium
+  source:
+  - pricing
+  generated: '2026-08-28'
+  method: derived
 image: https://cdn.shopify.com/s/files/1/0424/8387/6008/files/New_Bags_Collections_-_web_banner.jpg?v=1704995950
 url: https://raw.githubusercontent.com/api-evangelist/poppy-handcrafted-popcorn/refs/heads/main/apis.yml
 x-type: company
