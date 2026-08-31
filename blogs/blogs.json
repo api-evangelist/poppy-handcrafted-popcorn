@@ -1,0 +1,14 @@
+{
+  "repo": "poppy-handcrafted-popcorn",
+  "feeds": [
+    {
+      "source": "https://poppyhandcraftedpopcorn.com/pages/faq",
+      "feed_url": "https://poppyhandcraftedpopcorn.com/pages/faq",
+      "title": "",
+      "saved": 0,
+      "method": "none"
+    }
+  ],
+  "post_count": 0,
+  "fetched": "2026-08-30T22:33:40Z"
+}

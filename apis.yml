@@ -29,6 +29,17 @@ tags:
 - E-Commerce
 - Agent Commerce
 - Universal Commerce Protocol
+- MCP
+- Shopify
+- Snacks
+tags_raw:
+- Company
+- Food and Beverage
+- Consumer Packaged Goods
+- Retail
+- E-Commerce
+- Agent Commerce
+- Universal Commerce Protocol
 - Model Context Protocol
 - Shopify
 - Snacks
@@ -38,6 +49,13 @@ apis:
   humanURL: https://poppyhandcraftedpopcorn.com/agents.md
   baseURL: https://poppyhandcraftedpopcorn.com/api/ucp/mcp
   tags:
+  - Agent Commerce
+  - Universal Commerce Protocol
+  - MCP
+  - E-Commerce
+  - Catalog
+  - Checkout
+  tags_raw:
   - Agent Commerce
   - Universal Commerce Protocol
   - Model Context Protocol
