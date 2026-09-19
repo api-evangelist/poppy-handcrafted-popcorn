@@ -42,7 +42,7 @@ tags:
 - Consumer Packaged Goods
 - Retail
 - E-Commerce
-- Agent Commerce
+- Agentic Commerce
 - Universal Commerce Protocol
 - MCP
 - Shopify
@@ -64,7 +64,7 @@ apis:
   humanURL: https://poppyhandcraftedpopcorn.com/agents.md
   baseURL: https://poppyhandcraftedpopcorn.com/api/ucp/mcp
   tags:
-  - Agent Commerce
+  - Agentic Commerce
   - Universal Commerce Protocol
   - MCP
   - E-Commerce
