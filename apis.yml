@@ -98,6 +98,9 @@ apis:
     url: lifecycle/poppy-handcrafted-popcorn-lifecycle.yml
   - type: Conformance
     url: conformance/poppy-handcrafted-popcorn-conformance.yml
+  x-surface: platform-generated
+  x-platform: shopify
+  x-platform-surface: ucp
 maintainers:
 - FN: Kin Lane
   email: kin@apievangelist.com
