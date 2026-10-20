@@ -5,29 +5,23 @@ name: Poppy Hand-Crafted Popcorn UCP Commerce MCP Server
 status: live
 protocol: Model Context Protocol over HTTP JSON-RPC 2.0
 implements: Universal Commerce Protocol (UCP) 2026-04-08
-
 ownership:
   verified: true
-  note: >-
-    The endpoint is served on the company's own apex domain and the discovery document
-    identifies this merchant specifically - /.well-known/ucp carries merchant_name
-    "Poppy Hand-Crafted Popcorn", merchant_origin poppyhandcraftedpopcorn.com and
-    shop_id 42483876008, and /.well-known/oauth-protected-resource names
-    resource https://poppyhandcraftedpopcorn.com. The MCP transport and the UCP tool
-    contract are provided natively by Shopify to every store on the platform; the
-    catalog, cart, checkout and order data behind them are Poppy's.
-
+  note: The endpoint is served on the company's own apex domain and the discovery document identifies
+    this merchant specifically - /.well-known/ucp carries merchant_name "Poppy Hand-Crafted Popcorn",
+    merchant_origin poppyhandcraftedpopcorn.com and shop_id 42483876008, and /.well-known/oauth-protected-resource
+    names resource https://poppyhandcraftedpopcorn.com. The MCP transport and the UCP tool contract are
+    provided natively by Shopify to every store on the platform; the catalog, cart, checkout and order
+    data behind them are Poppy's.
 deployment:
   mode: remote
   endpoint: https://poppyhandcraftedpopcorn.com/api/ucp/mcp
   auth: none
   verified: probed
-  note: >-
-    tools/list answered HTTP 200 anonymously with the full 13-tool schema set.
-    A canonical alternate endpoint is published in /.well-known/ucp as
-    https://poppyhandcraftedpopcorn.myshopify.com/api/ucp/mcp - the same server on the
-    platform hostname. No stdio package is published, so there is nothing to install.
-
+  note: tools/list answered HTTP 200 anonymously with the full 13-tool schema set. A canonical alternate
+    endpoint is published in /.well-known/ucp as https://poppyhandcraftedpopcorn.myshopify.com/api/ucp/mcp
+    - the same server on the platform hostname. No stdio package is published, so there is nothing to
+    install.
 discovery:
 - path: /llms.txt
   url: https://poppyhandcraftedpopcorn.com/llms.txt
@@ -42,13 +36,11 @@ discovery:
 - path: /.well-known/ucp
   url: https://poppyhandcraftedpopcorn.com/.well-known/ucp
   status: 200
-
 transport:
   request: 'POST with Content-Type: application/json'
   accept: application/json, text/event-stream
   jsonrpc: '2.0'
   raw_manifest: mcp/poppy-handcrafted-popcorn-tools-list.json
-
 meta_contract:
   required_on_every_tool:
   - name: meta.ucp-agent.profile
@@ -57,7 +49,6 @@ meta_contract:
   - name: meta.idempotency-key
     type: string
     description: Required ONLY on complete_checkout. Not accepted by any other tool.
-
 tool_count: 13
 tools:
 - name: search_catalog
@@ -94,7 +85,8 @@ tools:
   description: Updates a checkout (used to set shipping address and method).
 - name: complete_checkout
   category: checkout
-  description: Completes a checkout and returns order ID and Thank You Page URL. Requires meta.idempotency-key and buyer-approved payment.
+  description: Completes a checkout and returns order ID and Thank You Page URL. Requires meta.idempotency-key
+    and buyer-approved payment.
   requires_idempotency_key: true
 - name: cancel_checkout
   category: checkout
@@ -103,7 +95,6 @@ tools:
 - name: get_order
   category: order
   description: Get the details of an order.
-
 capabilities_declared:
   source: https://poppyhandcraftedpopcorn.com/.well-known/ucp
   services:
@@ -122,15 +113,12 @@ capabilities_declared:
   - com.google.pay (gpay)
   - dev.shopify.card
   - dev.shopify.shop_pay
-
 buyer_approval_invariant:
   stated: true
   source: https://poppyhandcraftedpopcorn.com/llms.txt
-  rule: >-
-    "Checkout requires human approval. Agents must not complete payment without explicit
-    buyer consent." robots.txt repeats it: no scripted form fills or end-to-end agent flows
-    that finalize payment without contemporaneous human approval.
-
+  rule: '"Checkout requires human approval. Agents must not complete payment without explicit buyer consent."
+    robots.txt repeats it: no scripted form fills or end-to-end agent flows that finalize payment without
+    contemporaneous human approval.'
 related_reading_surface:
   note: Unauthenticated read-only storefront JSON published in llms.txt, verified 200.
   endpoints:
@@ -140,3 +128,44 @@ related_reading_surface:
     status: 200
   - url: https://poppyhandcraftedpopcorn.com/sitemap.xml
     status: 200
+tool_quality:
+  tool_count: 13
+  tokens_total: 49354
+  tokens_per_tool_median: 2906
+  heavy_tools:
+  - name: complete_checkout
+    tokens: 7009
+  - name: create_checkout
+    tokens: 5572
+  - name: update_checkout
+    tokens: 5528
+  - name: get_checkout
+    tokens: 5285
+  - name: update_cart
+    tokens: 3784
+  heavy_tool_count: 13
+  params_total: 29
+  params_undescribed: 0
+  params_described_pct: 100.0
+  tools_with_undescribed_params: 0
+  tools_annotated: 0
+  annotated_pct: 0.0
+  state_changing_unhinted:
+  - create_checkout
+  - update_checkout
+  - cancel_checkout
+  - create_cart
+  - update_cart
+  - cancel_cart
+  tools_missing_schema: 0
+  short_descriptions: 0
+  duplicate_descriptions: 0
+  duplicate_names: 0
+  nonportable_names: []
+  output_schema_count: 13
+  token_estimate: chars/3.6 of each compact tool definition
+  source: mcp/poppy-handcrafted-popcorn-tools-list.json
+  measured: '2026-10-20'
+  scored: false
+  note: Facts from the saved tools/list capture (mcp_tool_quality.py); recorded, not scored. Checks learned
+    from Glimind's agent-readiness audit.
